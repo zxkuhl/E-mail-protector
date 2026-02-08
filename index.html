@@ -3,95 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Firebase File Uploader </title>
+  <title>Firebase Large File Upload</title>
   <style>
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      max-width: 600px;
-      margin: 40px auto;
-      padding: 20px;
-      background: #f9f9f9;
-      text-align: center;
-    }
-    h1 {
-      color: #333;
-    }
-    .container {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-    input[type="file"] {
-      margin: 20px 0;
-    }
-    button {
-      background: #4285f4;
-      color: white;
-      border: none;
-      padding: 12px 30px;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:hover {
-      background: #357ae8;
-    }
-    button:disabled {
-      background: #aaa;
-      cursor: not-allowed;
-    }
-    #progress {
-      margin: 20px 0;
-      height: 8px;
-      background: #ddd;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    #progress-bar {
-      height: 100%;
-      width: 0%;
-      background: #34a853;
-      transition: width 0.3s;
-    }
-    #status {
-      margin-top: 15px;
-      font-weight: bold;
-      color: #555;
-    }
-    #download-link {
-      margin-top: 20px;
-      word-break: break-all;
-      color: #1a73e8;
-    }
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 20px; background:#f8f9fa; }
+    h1 { color: #1a73e8; }
+    .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); }
+    input, button { margin: 15px 0; }
+    button { background: #1a73e8; color:white; border:none; padding:12px 35px; border-radius:6px; font-size:16px; cursor:pointer; }
+    button:disabled { background:#aaa; cursor:not-allowed; }
+    #progress { height:12px; background:#e0e0e0; border-radius:6px; overflow:hidden; margin:20px 0; }
+    #progress-bar { height:100%; width:0%; background:#34a853; transition:width 0.4s; }
+    #status { font-weight:bold; min-height:30px; margin:15px 0; }
+    #error { color:#d93025; font-weight:bold; }
+    #time-est { color:#555; font-size:0.95em; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>Upload Files to Firebase Storage</h1>
+    <h1>Upload Large File to Firebase (227 MB+)</h1>
 
-    <input type="file" id="fileInput" accept="*/*" />
+    <input type="file" id="fileInput" />
 
-    <button id="uploadBtn" disabled>Upload File</button>
+    <button id="uploadBtn" disabled>Start Upload</button>
 
-    <div id="progress">
-      <div id="progress-bar"></div>
-    </div>
+    <div id="progress"><div id="progress-bar"></div></div>
 
-    <div id="status">Select a file to start</div>
+    <div id="status">Select your file first</div>
+    <div id="time-est"></div>
+    <div id="error"></div>
 
-    <div id="download-link"></div>
+    <div id="result"></div>
   </div>
 
-  <!-- Firebase SDKs -->
   <script type="module">
-    // Import Firebase modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
     import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
-    // Your Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyAH92j1gV8GD0o51tdqwFyLsqP9tyANZ2k",
       authDomain: "test-81062.firebaseapp.com",
@@ -103,68 +51,90 @@
       measurementId: "G-9D5PQJMKQ2"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const storage = getStorage(app);
 
     const fileInput = document.getElementById('fileInput');
     const uploadBtn = document.getElementById('uploadBtn');
     const status = document.getElementById('status');
+    const timeEst = document.getElementById('time-est');
+    const errorDiv = document.getElementById('error');
     const progressBar = document.getElementById('progress-bar');
-    const downloadLink = document.getElementById('download-link');
+    const resultDiv = document.getElementById('result');
 
-    // Enable upload button when a file is selected
     fileInput.addEventListener('change', () => {
+      errorDiv.textContent = '';
+      resultDiv.innerHTML = '';
       if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
         uploadBtn.disabled = false;
-        status.textContent = `Selected: ${fileInput.files[0].name}`;
-        downloadLink.innerHTML = '';
+        status.textContent = `File selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`;
       } else {
         uploadBtn.disabled = true;
-        status.textContent = 'Select a file to start';
+        status.textContent = 'Select your file first';
       }
     });
 
-    uploadBtn.addEventListener('click', async () => {
+    uploadBtn.addEventListener('click', () => {
       const file = fileInput.files[0];
       if (!file) return;
 
-      // Create a reference to the file in Firebase Storage
-      const storageRef = ref(storage, 'uploads/' + file.name);
+      errorDiv.textContent = '';
+      const fileSizeMB = file.size / (1024 * 1024);
+      const storageRef = ref(storage, `uploads/${Date.now()}_${file.name}`);
 
-      // Start the upload
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      const uploadTask = uploadBytesResumable(storageRef, file, {
+        // Helps with large files — tells server to expect resumable
+      });
 
       uploadBtn.disabled = true;
-      status.textContent = 'Uploading...';
+      status.textContent = 'Starting upload...';
       progressBar.style.width = '0%';
+
+      let lastProgress = 0;
+      let startTime = Date.now();
 
       uploadTask.on('state_changed',
         (snapshot) => {
-          // Get upload progress
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
           progressBar.style.width = progress + '%';
-          status.textContent = `Uploading... ${Math.round(progress)}%`;
+
+          const elapsedSec = (Date.now() - startTime) / 1000;
+          const speedMBps = lastProgress > 0 ? (snapshot.bytesTransferred - lastProgress) / 1024 / 1024 / (elapsedSec / (progress - lastProgress)*100/100) : 0;
+          lastProgress = progress;
+
+          let eta = '';
+          if (progress < 99 && elapsedSec > 5) {
+            const remaining = (fileSizeMB * (100 - progress) / progress);
+            eta = `~${Math.round(remaining)} MB left`;
+          }
+
+          status.textContent = `Uploading... ${progress}%`;
+          timeEst.textContent = eta ? `${eta} — keep this tab open` : '';
         },
         (error) => {
-          // Handle unsuccessful uploads
-          console.error(error);
-          status.textContent = 'Upload failed! ' + error.message;
+          console.error('Upload error:', error);
+          let msg = 'Upload failed. ';
+          if (error.code === 'storage/unauthorized') msg += '(permission denied)';
+          else if (error.code === 'storage/canceled') msg += '(canceled)';
+          else if (error.code) msg += `(${error.code})`;
+          else msg += error.message;
+
+          status.textContent = '';
+          errorDiv.textContent = msg + ' — try again or use a better connection';
           uploadBtn.disabled = false;
         },
         async () => {
-          // Upload completed successfully
-          status.textContent = 'Upload successful!';
+          status.textContent = 'Upload finished!';
+          timeEst.textContent = '';
           uploadBtn.disabled = false;
-          fileInput.value = ''; // Clear input
+          fileInput.value = '';
 
-          // Get download URL
           try {
             const url = await getDownloadURL(uploadTask.snapshot.ref);
-            downloadLink.innerHTML = `Download your file: <a href="${url}" target="_blank">${url}</a>`;
-          } catch (err) {
-            console.error(err);
-            status.textContent = 'Could not get download URL';
+            resultDiv.innerHTML = `Success!<br><a href="${url}" target="_blank">Download / Open file</a>`;
+          } catch (e) {
+            errorDiv.textContent = 'Upload OK but couldn’t get link';
           }
         }
       );
