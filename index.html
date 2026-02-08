@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Firebase File Uploader</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f9f9f9;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    input[type="file"] {
+      margin: 20px 0;
+    }
+    button {
+      background: #4285f4;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #357ae8;
+    }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    #progress {
+      margin: 20px 0;
+      height: 8px;
+      background: #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #34a853;
+      transition: width 0.3s;
+    }
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #555;
+    }
+    #download-link {
+      margin-top: 20px;
+      word-break: break-all;
+      color: #1a73e8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Upload Files to Firebase Storage</h1>
+
+    <input type="file" id="fileInput" accept="*/*" />
+
+    <button id="uploadBtn" disabled>Upload File</button>
+
+    <div id="progress">
+      <div id="progress-bar"></div>
+    </div>
+
+    <div id="status">Select a file to start</div>
+
+    <div id="download-link"></div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAH92j1gV8GD0o51tdqwFyLsqP9tyANZ2k",
+      authDomain: "test-81062.firebaseapp.com",
+      databaseURL: "https://test-81062-default-rtdb.firebaseio.com",
+      projectId: "test-81062",
+      storageBucket: "test-81062.firebasestorage.app",
+      messagingSenderId: "973552500364",
+      appId: "1:973552500364:web:f48c7c0cf981aa178745a9",
+      measurementId: "G-9D5PQJMKQ2"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const storage = getStorage(app);
+
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const status = document.getElementById('status');
+    const progressBar = document.getElementById('progress-bar');
+    const downloadLink = document.getElementById('download-link');
+
+    // Enable upload button when a file is selected
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        uploadBtn.disabled = false;
+        status.textContent = `Selected: ${fileInput.files[0].name}`;
+        downloadLink.innerHTML = '';
+      } else {
+        uploadBtn.disabled = true;
+        status.textContent = 'Select a file to start';
+      }
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      // Create a reference to the file in Firebase Storage
+      const storageRef = ref(storage, 'uploads/' + file.name);
+
+      // Start the upload
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadBtn.disabled = true;
+      status.textContent = 'Uploading...';
+      progressBar.style.width = '0%';
+
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          // Get upload progress
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          progressBar.style.width = progress + '%';
+          status.textContent = `Uploading... ${Math.round(progress)}%`;
+        },
+        (error) => {
+          // Handle unsuccessful uploads
+          console.error(error);
+          status.textContent = 'Upload failed! ' + error.message;
+          uploadBtn.disabled = false;
+        },
+        async () => {
+          // Upload completed successfully
+          status.textContent = 'Upload successful!';
+          uploadBtn.disabled = false;
+          fileInput.value = ''; // Clear input
+
+          // Get download URL
+          try {
+            const url = await getDownloadURL(uploadTask.snapshot.ref);
+            downloadLink.innerHTML = `Download your file: <a href="${url}" target="_blank">${url}</a>`;
+          } catch (err) {
+            console.error(err);
+            status.textContent = 'Could not get download URL';
+          }
+        }
+      );
+    });
+  </script>
+</body>
+</html>
