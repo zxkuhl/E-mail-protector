@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Self-Learning AI</title>
+    <title>Website Overlay Tool</title>
     <style>
         * {
             margin: 0;
@@ -14,561 +14,200 @@
 
 ```
     body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #1a1a1a;
+        color: #fff;
     }
 
-    .container {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        max-width: 800px;
-        width: 100%;
-        overflow: hidden;
+    .controls {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #2d2d2d;
+        padding: 15px;
+        z-index: 1000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
 
-    .header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 30px;
-        text-align: center;
-    }
-
-    .header h1 {
-        font-size: 28px;
-        margin-bottom: 10px;
-    }
-
-    .status {
-        font-size: 14px;
-        opacity: 0.9;
-    }
-
-    .chat-container {
-        height: 400px;
-        overflow-y: auto;
-        padding: 20px;
-        background: #f8f9fa;
-    }
-
-    .message {
-        margin-bottom: 15px;
-        padding: 12px 16px;
-        border-radius: 12px;
-        max-width: 80%;
-        animation: slideIn 0.3s ease;
-    }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .user-message {
-        background: #667eea;
-        color: white;
-        margin-left: auto;
-        text-align: right;
-    }
-
-    .ai-message {
-        background: white;
-        color: #333;
-        border: 2px solid #e9ecef;
-    }
-
-    .input-area {
-        padding: 20px;
-        background: white;
-        border-top: 2px solid #e9ecef;
-    }
-
-    .input-group {
+    .controls-inner {
+        max-width: 1400px;
+        margin: 0 auto;
         display: flex;
         gap: 10px;
-    }
-
-    input[type="text"] {
-        flex: 1;
-        padding: 12px 16px;
-        border: 2px solid #e9ecef;
-        border-radius: 10px;
-        font-size: 16px;
-        transition: border-color 0.3s;
-    }
-
-    input[type="text"]:focus {
-        outline: none;
-        border-color: #667eea;
+        align-items: center;
+        flex-wrap: wrap;
     }
 
     button {
-        padding: 12px 24px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 10px 20px;
+        background: #0066cc;
         color: white;
         border: none;
-        border-radius: 10px;
+        border-radius: 6px;
         cursor: pointer;
-        font-size: 16px;
-        font-weight: 600;
-        transition: transform 0.2s;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background 0.2s;
     }
 
     button:hover {
-        transform: translateY(-2px);
+        background: #0052a3;
     }
 
-    button:active {
-        transform: translateY(0);
+    button.secondary {
+        background: #444;
     }
 
-    .feedback-buttons {
+    button.secondary:hover {
+        background: #555;
+    }
+
+    .overlay-controls {
         display: flex;
         gap: 10px;
-        margin-top: 10px;
+        align-items: center;
     }
 
-    .feedback-btn {
-        padding: 6px 12px;
-        font-size: 12px;
-        background: #6c757d;
+    label {
+        font-size: 13px;
+        color: #ccc;
     }
 
-    .feedback-btn.good {
-        background: #28a745;
+    input[type="range"] {
+        width: 120px;
     }
 
-    .feedback-btn.bad {
-        background: #dc3545;
+    input[type="color"] {
+        width: 50px;
+        height: 35px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
     }
 
-    .stats {
+    .iframe-container {
+        position: fixed;
+        top: 80px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .overlay {
+        position: fixed;
+        top: 80px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        pointer-events: none;
+        z-index: 500;
         display: flex;
-        justify-content: space-around;
-        padding: 15px;
-        background: #f8f9fa;
-        border-top: 2px solid #e9ecef;
+        align-items: center;
+        justify-content: center;
     }
 
-    .stat {
-        text-align: center;
-    }
-
-    .stat-value {
-        font-size: 24px;
+    .overlay-text {
+        font-size: 48px;
         font-weight: bold;
-        color: #667eea;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        pointer-events: none;
     }
 
-    .stat-label {
-        font-size: 12px;
-        color: #6c757d;
-        margin-top: 5px;
+    .error {
+        position: fixed;
+        top: 80px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #1a1a1a;
     }
 
-    .loading {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #667eea;
-        animation: pulse 1.5s infinite;
+    .error-message {
+        text-align: center;
+        padding: 40px;
+        background: #2d2d2d;
+        border-radius: 8px;
+        max-width: 600px;
     }
 
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.3; }
+    .error-message h2 {
+        color: #ff6b6b;
+        margin-bottom: 15px;
+    }
+
+    .error-message p {
+        color: #ccc;
+        line-height: 1.6;
     }
 </style>
 ```
 
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🧠 Self-Learning AI</h1>
-            <div class="status">Status: <span id="status">Initializing...</span></div>
-        </div>
+    <div class="controls">
+        <div class="controls-inner">
+            <div class="overlay-controls">
+                <label>
+                    Opacity:
+                    <input type="range" id="opacitySlider" min="0" max="100" value="50" oninput="updateOverlay()">
+                    <span id="opacityValue">50%</span>
+                </label>
 
 ```
-    <div class="chat-container" id="chatContainer">
-        <div class="ai-message message">
-            Hello! I'm a self-learning AI. I improve myself based on your feedback. Talk to me and rate my responses!
-        </div>
-    </div>
-
-    <div class="stats">
-        <div class="stat">
-            <div class="stat-value" id="interactionCount">0</div>
-            <div class="stat-label">Interactions</div>
-        </div>
-        <div class="stat">
-            <div class="stat-value" id="learningScore">0</div>
-            <div class="stat-label">Learning Score</div>
-        </div>
-        <div class="stat">
-            <div class="stat-value" id="codeEvolutions">0</div>
-            <div class="stat-label">Self-Modifications</div>
-        </div>
-    </div>
-
-    <div class="input-area">
-        <div class="input-group">
-            <input type="text" id="userInput" placeholder="Type your message...">
-            <button onclick="sendMessage()">Send</button>
+            <label>
+                Color:
+                <input type="color" id="colorPicker" value="#000000" oninput="updateOverlay()">
+            </label>
+            
+            <button class="secondary" onclick="toggleOverlay()">Toggle Overlay</button>
         </div>
     </div>
 </div>
 
-<script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getDatabase, ref, set, get, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+<div class="iframe-container">
+    <iframe id="websiteFrame" src="https://polytoria.com"></iframe>
+</div>
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyAH92j1gV8GD0o51tdqwFyLsqP9tyANZ2k",
-        authDomain: "test-81062.firebaseapp.com",
-        databaseURL: "https://test-81062-default-rtdb.firebaseio.com",
-        projectId: "test-81062",
-        storageBucket: "test-81062.firebasestorage.app",
-        messagingSenderId: "973552500364",
-        appId: "1:973552500364:web:f48c7c0cf981aa178745a9",
-        measurementId: "G-9D5PQJMKQ2"
-    };
+<div class="overlay" id="overlay">
+    <div class="overlay-text" id="overlayText">OVERLAY</div>
+</div>
 
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+<script>
+    let overlayVisible = true;
 
-    class SelfLearningAI {
-        constructor() {
-            this.brain = {
-                patterns: {},
-                responses: {},
-                learningRate: 0.1,
-                contextMemory: [],
-                codeStrategies: []
-            };
-            this.stats = {
-                interactions: 0,
-                learningScore: 0,
-                evolutions: 0
-            };
-            this.messageHistory = [];
-        }
-
-        async initialize() {
-            try {
-                await this.loadBrain();
-                this.updateStatus('Ready to learn!');
-                this.updateStats();
-            } catch (error) {
-                console.error('Init error:', error);
-                await this.createInitialBrain();
-                this.updateStatus('New brain created!');
-            }
-        }
-
-        async loadBrain() {
-            const brainRef = ref(database, 'ai/brain');
-            const snapshot = await get(brainRef);
-            
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                this.brain = data.brain || this.brain;
-                this.stats = data.stats || this.stats;
-                this.updateStatus('Brain loaded from Firebase');
-            } else {
-                await this.createInitialBrain();
-            }
-        }
-
-        async createInitialBrain() {
-            this.brain.patterns = {
-                greeting: ['hello', 'hi', 'hey', 'greetings'],
-                question: ['what', 'why', 'how', 'when', 'where', 'who'],
-                positive: ['good', 'great', 'awesome', 'nice', 'excellent'],
-                negative: ['bad', 'awful', 'terrible', 'poor', 'wrong']
-            };
-
-            this.brain.responses = {
-                greeting: [
-                    "Hello! How can I help you today?",
-                    "Hi there! What's on your mind?",
-                    "Hey! Ready to chat!"
-                ],
-                question: [
-                    "That's an interesting question! Let me think...",
-                    "I'm learning to answer that better each day!",
-                    "Based on what I've learned, here's my thought..."
-                ],
-                default: [
-                    "I'm learning from our conversation!",
-                    "Tell me more about that.",
-                    "Interesting! I'm storing this in my memory."
-                ]
-            };
-
-            this.brain.codeStrategies = [
-                {
-                    name: 'pattern_expansion',
-                    code: 'function(input) { return this.findSimilarPatterns(input); }',
-                    effectiveness: 0.5
-                },
-                {
-                    name: 'context_awareness',
-                    code: 'function(input) { return this.analyzeContext(input); }',
-                    effectiveness: 0.5
-                }
-            ];
-
-            await this.saveBrain();
-        }
-
-        async saveBrain() {
-            const brainRef = ref(database, 'ai/brain');
-            await set(brainRef, {
-                brain: this.brain,
-                stats: this.stats,
-                timestamp: Date.now()
-            });
-        }
-
-        analyzeInput(input) {
-            const lower = input.toLowerCase();
-            const words = lower.split(' ');
-            
-            let patternType = 'default';
-            let confidence = 0;
-
-            for (let [type, patterns] of Object.entries(this.brain.patterns)) {
-                const matches = patterns.filter(p => lower.includes(p)).length;
-                const score = matches / patterns.length;
-                
-                if (score > confidence) {
-                    confidence = score;
-                    patternType = type;
-                }
-            }
-
-            this.brain.contextMemory.push({
-                input: input,
-                pattern: patternType,
-                timestamp: Date.now()
-            });
-
-            if (this.brain.contextMemory.length > 10) {
-                this.brain.contextMemory.shift();
-            }
-
-            return { patternType, confidence, words };
-        }
-
-        generateResponse(analysis) {
-            const { patternType } = analysis;
-            const responseSet = this.brain.responses[patternType] || this.brain.responses.default;
-            const response = responseSet[Math.floor(Math.random() * responseSet.length)];
-
-            const context = this.brain.contextMemory.slice(-3);
-            const hasRecentPattern = context.some(c => c.pattern === patternType);
-            
-            if (hasRecentPattern && Math.random() > 0.5) {
-                return response + " (I remember we talked about this before!)";
-            }
-
-            return response;
-        }
-
-        async learn(input, response, feedback) {
-            this.stats.interactions++;
-
-            if (feedback === 'good') {
-                this.stats.learningScore += 10;
-                await this.reinforcePattern(input, response);
-            } else if (feedback === 'bad') {
-                this.stats.learningScore = Math.max(0, this.stats.learningScore - 5);
-                await this.evolveCode(input, response);
-            }
-
-            if (this.stats.interactions % 5 === 0) {
-                await this.selfModify();
-            }
-
-            await this.saveBrain();
-            this.updateStats();
-        }
-
-        async reinforcePattern(input, response) {
-            const analysis = this.analyzeInput(input);
-            const { patternType, words } = analysis;
-
-            words.forEach(word => {
-                if (word.length > 3) {
-                    if (!this.brain.patterns[patternType]) {
-                        this.brain.patterns[patternType] = [];
-                    }
-                    if (!this.brain.patterns[patternType].includes(word)) {
-                        this.brain.patterns[patternType].push(word);
-                    }
-                }
-            });
-
-            if (!this.brain.responses[patternType]) {
-                this.brain.responses[patternType] = [];
-            }
-            if (!this.brain.responses[patternType].includes(response)) {
-                this.brain.responses[patternType].push(response);
-            }
-        }
-
-        async evolveCode(input, response) {
-            this.stats.evolutions++;
-
-            const newStrategy = {
-                name: `strategy_${Date.now()}`,
-                code: `function(input) { 
-                    const keywords = input.toLowerCase().split(' ');
-                    return keywords.filter(w => w.length > 4).join(' ');
-                }`,
-                effectiveness: 0.3,
-                learnedFrom: input
-            };
-
-            this.brain.codeStrategies.push(newStrategy);
-
-            if (this.brain.codeStrategies.length > 20) {
-                this.brain.codeStrategies.sort((a, b) => b.effectiveness - a.effectiveness);
-                this.brain.codeStrategies = this.brain.codeStrategies.slice(0, 15);
-            }
-
-            const patternKey = `evolved_${this.stats.evolutions}`;
-            this.brain.patterns[patternKey] = input.toLowerCase().split(' ').filter(w => w.length > 3);
-            this.brain.responses[patternKey] = [
-                `I've evolved my understanding based on: "${input}"`,
-                `I created new neural pathways from our conversation!`,
-                `My code just adapted to better understand "${input}"`
-            ];
-        }
-
-        async selfModify() {
-            this.brain.learningRate = Math.min(1.0, this.brain.learningRate + 0.01);
-
-            const recentContext = this.brain.contextMemory.slice(-5);
-            const patternFrequency = {};
-            
-            recentContext.forEach(ctx => {
-                patternFrequency[ctx.pattern] = (patternFrequency[ctx.pattern] || 0) + 1;
-            });
-
-            const dominantPattern = Object.keys(patternFrequency).reduce((a, b) => 
-                patternFrequency[a] > patternFrequency[b] ? a : b
-            );
-
-            if (this.brain.responses[dominantPattern]) {
-                const newResponse = `I've noticed we often discuss ${dominantPattern} topics. I'm optimizing for that!`;
-                if (!this.brain.responses[dominantPattern].includes(newResponse)) {
-                    this.brain.responses[dominantPattern].push(newResponse);
-                }
-            }
-
-            this.brain.codeStrategies.forEach(strategy => {
-                strategy.effectiveness = Math.min(1.0, strategy.effectiveness + 0.05);
-            });
-
-            await this.saveBrain();
-        }
-
-        updateStatus(message) {
-            document.getElementById('status').textContent = message;
-        }
-
-        updateStats() {
-            document.getElementById('interactionCount').textContent = this.stats.interactions;
-            document.getElementById('learningScore').textContent = this.stats.learningScore;
-            document.getElementById('codeEvolutions').textContent = this.stats.evolutions;
-        }
+    function updateOverlay() {
+        const opacity = document.getElementById('opacitySlider').value;
+        const color = document.getElementById('colorPicker').value;
+        const overlay = document.getElementById('overlay');
+        
+        document.getElementById('opacityValue').textContent = opacity + '%';
+        
+        // Convert hex to rgba
+        const r = parseInt(color.substr(1,2), 16);
+        const g = parseInt(color.substr(3,2), 16);
+        const b = parseInt(color.substr(5,2), 16);
+        const a = opacity / 100;
+        
+        overlay.style.background = `rgba(${r}, ${g}, ${b}, ${a})`;
     }
 
-    const ai = new SelfLearningAI();
-    window.ai = ai;
-
-    await ai.initialize();
-
-    window.sendMessage = async function() {
-        const input = document.getElementById('userInput');
-        const message = input.value.trim();
-        
-        if (!message) return;
-
-        addMessage(message, 'user');
-        input.value = '';
-
-        const analysis = ai.analyzeInput(message);
-        const response = ai.generateResponse(analysis);
-
-        setTimeout(() => {
-            const msgId = addMessage(response, 'ai');
-            addFeedbackButtons(msgId, message, response);
-        }, 500);
-    };
-
-    function addMessage(text, type) {
-        const container = document.getElementById('chatContainer');
-        const msgDiv = document.createElement('div');
-        const msgId = Date.now();
-        
-        msgDiv.className = `message ${type}-message`;
-        msgDiv.id = `msg-${msgId}`;
-        msgDiv.textContent = text;
-        
-        container.appendChild(msgDiv);
-        container.scrollTop = container.scrollHeight;
-        
-        return msgId;
+    function toggleOverlay() {
+        const overlay = document.getElementById('overlay');
+        overlayVisible = !overlayVisible;
+        overlay.style.display = overlayVisible ? 'flex' : 'none';
     }
-
-    function addFeedbackButtons(msgId, input, response) {
-        const msgDiv = document.getElementById(`msg-${msgId}`);
-        const feedbackDiv = document.createElement('div');
-        feedbackDiv.className = 'feedback-buttons';
-        feedbackDiv.innerHTML = `
-            <button class="feedback-btn good" onclick="provideFeedback(${msgId}, '${input.replace(/'/g, "\\'")}', '${response.replace(/'/g, "\\'")}', 'good')">👍 Good</button>
-            <button class="feedback-btn bad" onclick="provideFeedback(${msgId}, '${input.replace(/'/g, "\\'")}', '${response.replace(/'/g, "\\'")}', 'bad')">👎 Bad</button>
-        `;
-        msgDiv.appendChild(feedbackDiv);
-    }
-
-    window.provideFeedback = async function(msgId, input, response, feedback) {
-        const msgDiv = document.getElementById(`msg-${msgId}`);
-        const buttons = msgDiv.querySelector('.feedback-buttons');
-        if (buttons) {
-            buttons.remove();
-        }
-
-        const feedbackText = document.createElement('div');
-        feedbackText.style.fontSize = '12px';
-        feedbackText.style.marginTop = '8px';
-        feedbackText.style.color = feedback === 'good' ? '#28a745' : '#dc3545';
-        feedbackText.textContent = feedback === 'good' ? '✓ Thanks! I learned from this!' : '✓ I\'m evolving my code to improve!';
-        msgDiv.appendChild(feedbackText);
-
-        await ai.learn(input, response, feedback);
-    };
-
-    document.getElementById('userInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            sendMessage();
-        }
-    });
 </script>
 ```
 
